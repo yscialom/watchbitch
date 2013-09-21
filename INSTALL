@@ -1,0 +1,33 @@
+Installation of watchbitch on a debian-like linux with Gnome (2, Unity, Shell):
+
+1/ Install the watchbitch binary
+> Copy the watchbitch binary to a conveniant place (e.g. /usr/bin/watchbitch)
+
+2/ X Window variables export;
+> Copy/Move the file export_xvars to a definitive location
+	(e.g. /usr/sbin/export_xvars);
+> Add this script to the start-up programs;
+> Run it one.
+
+3/ Create a watch:
+> Edit the sample.cfg file to your conveniance;
+	- NAME [string] is the title of the watch, it will be displayed in the
+		notification popup;
+	- COMMAND [string] is an outputless shell command which will be
+		frequently tested;
+	- DEFAULT_VALUE [0|1] is the expected return value of $COMMAND at log
+		time;
+	- MESSAGE_ONLINE [string] is the text which will accompagny the
+		notification pup up when $COMMAND will return a non-zero value
+		for the first time;
+	- MESSAGE_OFFLINE [string] is the text which will accompagny the
+		notification pup up when $COMMAND will return a zero value
+		for the first time;
+> Store your watch configration file to your conveniance
+	(e.g. $HOME/.config/watchbitch/.).
+
+4/ Edit your crontab
+> With your favorite editor (e.g. butterfly) edit your crontab by running
+	$ EDITOR=butterfly crontab -e
+> Add an entry for each of your watch:
+	* * * * * watchbitch $HOME/.config/watchbitch/sample.cfg

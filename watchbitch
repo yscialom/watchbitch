@@ -1,0 +1,66 @@
+#!/bin/bash
+
+TRUE=1
+FALSE=0
+VERBOSE_LEVEL=4
+LOGFILE=/tmp/watchbitch.log
+
+#------------------ LOG -------------------
+
+silent_lvl=0
+err_lvl=1
+wrn_lvl=2
+inf_lvl=3
+dbg_lvl=4
+
+log() { log_level $silent_lvl "NOTE: $1"; }
+error() { log_level $err_lvl "ERROR: $1"; }
+warn() { log_level $wrn_lvl "WARNING: $1"; }
+inf() { log_level $inf_lvl "INFO: $1"; }
+debug() { log_level $dbg_lvl "DEBUG: $1"; }
+debug_result() { log_level $dbg_lvl "DEBUG-RESULT: \t\t$1"; echo $1; }
+log_level() {
+	if [ "$VERBOSE_LEVEL" -ge "$1" ]
+	then
+		echo -e "$2" | fold -w70 -s | sed '2~1s/^/  /' >> $LOGFILE
+	fi
+}
+
+#------------------ NOTIFY -------------------
+## Notify the user
+## Args:
+##	$1: string	watch name
+##	$2: bool	is client online (1=yes)
+notify () {
+	debug "notify \"$1\" \"$2\" \"$3\""
+	date=$(date +"%Y-%m-%d %H:%M:%S")
+	test 0 -eq $2 && img=user-offline || img=user-available
+	test 0 -eq $2 && message="$MESSAGE_OFFLINE" || message="$MESSAGE_ONLINE"
+	source ~/.Xdbus
+	notify-send -t 3000 -i $img "$1" "[$date] $message"
+}
+
+#------------------ LOAD -------------------
+load () {
+	source "$1"
+	debug "NAME = $NAME"
+	debug "COMMAND = $COMMAND"
+	debug "DEFAULT_VALUE = $DEFAULT_VALUE"
+	debug "MESSAGE_ONLINE = $MESSAGE_ONLINE"
+	debug "MESSAGE_OFFLINE = $MESSAGE_OFFLINE"
+}
+
+#------------------ ENTRY POINT -------------------
+load "$1"
+tempfile=/tmp/$(echo "$1" | base64)
+if [ ! -f $tempfile ]
+then
+	echo -n $DEFAULT_VALUE > $tempfile
+fi
+
+value=$($(eval $COMMAND &> /dev/null) && echo $TRUE || echo $FALSE)
+if [ ! $value -eq $(cat $tempfile) ]
+then
+	echo -n $value > $tempfile
+	notify "$NAME" $value
+fi
